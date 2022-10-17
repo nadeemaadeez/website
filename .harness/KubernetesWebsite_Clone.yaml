@@ -90,7 +90,12 @@ pipeline:
                   spec:
                     connectorRef: HarnessJiraConnector
                     issueKey: <+pipeline.stages.Jira_Process.spec.execution.steps.Create_Story.issue.key>
-                    fields: []
+                    transitionTo:
+                      transitionName: ""
+                      status: Done
+                    fields:
+                      - name: Comment
+                        value: Story has been completed.
         tags: {}
   identifier: KubernetesWebsite_Clone
   name: KubernetesWebsite - Clone
