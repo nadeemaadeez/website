@@ -83,7 +83,7 @@ pipeline:
                     connectorRef: HarnessJiraConnector
                     projectKey: HAR
                     issueType: Story
-                    issueKey: HAR-34
+                    issueKey: <+pipeline.stages.Jira_Process.spec.execution.steps.Create_Story.issue.key>
               - step:
                   name: Complete
                   identifier: Complete
@@ -91,7 +91,7 @@ pipeline:
                   timeout: 2m
                   spec:
                     connectorRef: HarnessJiraConnector
-                    issueKey: HAR-34
+                    issueKey: <+pipeline.stages.Jira_Process.spec.execution.steps.Create_Story.issue.key>
                     fields: []
         tags: {}
     - stage:
