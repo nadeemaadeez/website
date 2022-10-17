@@ -1,0 +1,102 @@
+pipeline:
+  name: KubernetesWebsite
+  identifier: KubernetesWebsite
+  projectIdentifier: SampleProject
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: GithubConnectorMN
+        repoName: website
+        build: <+input>
+  stages:
+    - stage:
+        name: BUILD CI
+        identifier: BUILD_CI
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: harnessnadeem
+              namespace: harness-delegate-ng
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          execution:
+            steps:
+              - step:
+                  type: GitClone
+                  name: GitClone
+                  identifier: GitClone
+                  spec:
+                    connectorRef: GithubConnectorMN
+                    repoName: website
+                    build:
+                      type: branch
+                      spec:
+                        branch: main
+    - stage:
+        name: Deploy CD
+        identifier: Deploy_CD
+        description: ""
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceRef: Service_1
+            serviceDefinition:
+              spec:
+                variables: []
+                manifests:
+                  - manifest:
+                      identifier: ManiKube
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: GitKubeWebsiteConnector
+                            gitFetchType: Branch
+                            paths:
+                              - content/en/examples/application/nginx-app.yaml
+                            repoName: https://github.com/kubernetes
+                            branch: main
+                        skipResourceVersioning: false
+              type: Kubernetes
+          infrastructure:
+            environmentRef: Devlopement_environment
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: harnessnadeem
+                namespace: harness-delegate-ng
+                releaseName: release-<+INFRA_KEY>
+            allowSimultaneousDeployments: false
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: false
+            rollbackSteps:
+              - step:
+                  name: Rollback Rollout Deployment
+                  identifier: rollbackRolloutDeployment
+                  type: K8sRollingRollback
+                  timeout: 10m
+                  spec:
+                    pruningEnabled: false
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
