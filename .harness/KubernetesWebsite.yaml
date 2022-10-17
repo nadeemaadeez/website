@@ -40,6 +40,61 @@ pipeline:
                       spec:
                         branch: main
     - stage:
+        name: Jira Process
+        identifier: Jira_Process
+        description: ""
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  name: Create Story
+                  identifier: Create_Story
+                  type: JiraCreate
+                  timeout: 5m
+                  spec:
+                    connectorRef: HarnessJiraConnector
+                    projectKey: HAR
+                    issueType: Story
+                    fields:
+                      - name: Comment
+                        value: Story has been created
+                      - name: Summary
+                        value: Harness Flow created on Jira
+              - step:
+                  name: Jira Approval
+                  identifier: Jira_Approval
+                  type: JiraApproval
+                  timeout: 2m
+                  spec:
+                    approvalCriteria:
+                      type: KeyValues
+                      spec:
+                        matchAnyCondition: true
+                        conditions:
+                          - key: Status
+                            operator: equals
+                            value: To Do
+                    rejectionCriteria:
+                      type: KeyValues
+                      spec:
+                        matchAnyCondition: true
+                        conditions: []
+                    connectorRef: HarnessJiraConnector
+                    projectKey: HAR
+                    issueType: Story
+                    issueKey: HAR-34
+              - step:
+                  name: Complete
+                  identifier: Complete
+                  type: JiraUpdate
+                  timeout: 2m
+                  spec:
+                    connectorRef: HarnessJiraConnector
+                    issueKey: HAR-34
+                    fields: []
+        tags: {}
+    - stage:
         name: Deploy CD
         identifier: Deploy_CD
         description: ""
@@ -74,7 +129,7 @@ pipeline:
                 connectorRef: harnessnadeem
                 namespace: harness-delegate-ng
                 releaseName: release-<+INFRA_KEY>
-            allowSimultaneousDeployments: false
+            allowSimultaneousDeployments: true
           execution:
             steps:
               - step:
