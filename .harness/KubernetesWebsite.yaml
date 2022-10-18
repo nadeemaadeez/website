@@ -155,3 +155,6 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        delegateSelectors:
+          - delegateharnessmn
+          - harnessmn
