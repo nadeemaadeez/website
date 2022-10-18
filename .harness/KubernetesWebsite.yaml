@@ -45,7 +45,7 @@ pipeline:
                   identifier: ACRDocker
                   spec:
                     connectorRef: AzureConnector
-                    repository: azuredevopsdotnetacr.azurecr.io/harness-demo
+                    repository: azuredevopsdotnetacr.azurecr.io/tap-hysis-demo/tap-packages
                     tags:
                       - AzureBuildCreation
     - stage:
