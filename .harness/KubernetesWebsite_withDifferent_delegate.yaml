@@ -131,17 +131,13 @@ pipeline:
           execution:
             steps:
               - step:
-                  name: Rollout Deployment
-                  identifier: rolloutDeployment
                   type: K8sRollingDeploy
-                  timeout: 10m
+                  name: RollingDeployment
+                  identifier: RollingDeployment
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
-                    delegateSelectors:
-                      - delegateharnessmn
-                      - harnessmn
-                  failureStrategies: []
+                  timeout: 10m
             rollbackSteps:
               - step:
                   name: Rollback Rollout Deployment
