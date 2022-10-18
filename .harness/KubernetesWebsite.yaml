@@ -39,6 +39,15 @@ pipeline:
                       type: branch
                       spec:
                         branch: main
+              - step:
+                  type: BuildAndPushACR
+                  name: ACRDocker
+                  identifier: ACRDocker
+                  spec:
+                    connectorRef: AzureConnector
+                    repository: azuredevopsdotnetacr.azurecr.io/harness-demo
+                    tags:
+                      - AzureBuildCreation
     - stage:
         name: Jira Process
         identifier: Jira_Process
@@ -140,6 +149,10 @@ pipeline:
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
+                    delegateSelectors:
+                      - delegateharnessmn
+                      - harnesazuredelegates
+                  failureStrategies: []
             rollbackSteps:
               - step:
                   name: Rollback Rollout Deployment
@@ -155,6 +168,3 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
-        delegateSelectors:
-          - delegateharnessmn
-          - harnessmn
