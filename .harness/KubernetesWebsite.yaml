@@ -135,7 +135,7 @@ pipeline:
             infrastructureDefinition:
               type: KubernetesDirect
               spec:
-                connectorRef: harnessnadeem
+                connectorRef: harnesskubeclustermn
                 namespace: harness-delegate-ng
                 releaseName: release-<+INFRA_KEY>
             allowSimultaneousDeployments: true
