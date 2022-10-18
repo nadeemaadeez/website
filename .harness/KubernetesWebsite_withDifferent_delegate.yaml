@@ -157,5 +157,7 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        delegateSelectors:
+          - delegateharnessmn
   identifier: KubernetesWebsite_withDifferent_delegate
   name: KubernetesWebsite withDifferent delegate
