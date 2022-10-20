@@ -122,14 +122,13 @@ pipeline:
           execution:
             steps:
               - step:
-                  type: K8sRollingDeploy
+                  type: K8sBlueGreenDeploy
                   name: Deploy
                   identifier: Deploy
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
                   timeout: 10m
-                  failureStrategies: []
             rollbackSteps: []
           infrastructure:
             environmentRef: Devlopement_environment
