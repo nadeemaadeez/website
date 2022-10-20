@@ -93,6 +93,46 @@ pipeline:
                     fields: []
         tags: {}
     - stage:
+        name: Deploy 1
+        identifier: Deploy_1
+        description: ""
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceRef: Service_2
+            serviceDefinition:
+              spec:
+                variables: []
+              type: Kubernetes
+          execution:
+            steps:
+              - step:
+                  type: K8sRollingDeploy
+                  name: Deploy
+                  identifier: Deploy
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: false
+                  timeout: 10m
+                  failureStrategies: []
+            rollbackSteps: []
+          infrastructure:
+            environmentRef: Devlopement_environment
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: HarAzureConnector
+                namespace: harness-delegate-ng
+                releaseName: release-<+INFRA_KEY>
+            allowSimultaneousDeployments: true
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+    - stage:
         name: Deploy CD
         identifier: Deploy_CD
         description: ""
