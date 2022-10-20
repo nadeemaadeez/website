@@ -146,6 +146,9 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        delegateSelectors:
+          - harnessazuredelegate
+          - harnesazuredelegates
     - stage:
         name: Deploy CD
         identifier: Deploy_CD
