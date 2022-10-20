@@ -37,6 +37,15 @@ pipeline:
                       type: branch
                       spec:
                         branch: main
+              - step:
+                  type: Security
+                  name: SecurityScanner
+                  identifier: SecurityScanner
+                  spec:
+                    privileged: true
+                    settings:
+                      policy_type: orchestratedScan
+                      scan_type: repository
     - stage:
         name: Jira Process
         identifier: Jira_Process
