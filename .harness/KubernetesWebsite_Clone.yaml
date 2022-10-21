@@ -37,6 +37,38 @@ pipeline:
                       spec:
                         branch: main
     - stage:
+        name: Security Scanner
+        identifier: Security_Scanner
+        type: SecurityTests
+        spec:
+          cloneCodebase: true
+          infrastructure:
+            useFromStage: BUILD_CI
+          serviceDependencies:
+            - identifier: dind
+              name: dind
+              type: Service
+              spec:
+                connectorRef: account.DockerConnector
+                image: docker:dind
+          sharedPaths:
+            - var/run/
+          execution:
+            steps:
+              - step:
+                  type: Security
+                  name: BanditScan
+                  identifier: BanditScan
+                  spec:
+                    privileged: true
+                    settings:
+                      policy_type: orchestratedScan
+                      scan_type: repository
+                      product_name: bandit
+                      product_config_name: default
+                      repository_branch: <+codebase.branch>
+                      repository_project: dvpwa
+    - stage:
         name: Jira Process
         identifier: Jira_Process
         description: ""
