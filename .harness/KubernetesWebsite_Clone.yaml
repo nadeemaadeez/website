@@ -154,13 +154,7 @@ pipeline:
                             repoName: website
                             branch: main
                         skipResourceVersioning: false
-                artifacts:
-                  primary:
-                    spec:
-                      connectorRef: account.DockerConnector
-                      imagePath: docker:dind
-                      tag: <+input>
-                    type: DockerRegistry
+                artifacts: {}
               type: Kubernetes
           infrastructure:
             environmentRef: Devlopement_environment
