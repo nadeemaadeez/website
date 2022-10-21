@@ -12,14 +12,13 @@ pipeline:
     - stage:
         name: BUILD CI
         identifier: BUILD_CI
-        description: ""
         type: CI
         spec:
           cloneCodebase: true
           infrastructure:
             type: KubernetesDirect
             spec:
-              connectorRef: harnessnadeem
+              connectorRef: HarAzureConnector
               namespace: harness-delegate-ng
               automountServiceAccountToken: true
               nodeSelector: {}
@@ -37,19 +36,6 @@ pipeline:
                       type: branch
                       spec:
                         branch: main
-              - step:
-                  type: Security
-                  name: SecurityScanner
-                  identifier: SecurityScanner
-                  spec:
-                    privileged: true
-                    settings:
-                      policy_type: orchestratedScan
-                      scan_type: repository
-                      product_name: sonarqube
-                      product_config_name: default
-                      repository_project: website
-                      repository_branch: main
     - stage:
         name: Jira Process
         identifier: Jira_Process
