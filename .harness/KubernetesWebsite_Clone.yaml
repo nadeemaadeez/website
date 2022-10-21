@@ -128,5 +128,73 @@ pipeline:
                       - name: Comment
                         value: Story has been completed.
         tags: {}
+    - stage:
+        name: deploy CD
+        identifier: deploy_CD
+        description: ""
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceRef: Service_2
+            serviceDefinition:
+              spec:
+                variables: []
+                manifests:
+                  - manifest:
+                      identifier: manifestmn
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: GitKubeWebsiteConnector
+                            gitFetchType: Branch
+                            paths:
+                              - content/en/examples/service/nginx-service.yaml
+                            repoName: website
+                            branch: main
+                        skipResourceVersioning: false
+              type: Kubernetes
+          infrastructure:
+            environmentRef: Devlopement_environment
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: HarAzureConnector
+                namespace: harness-delegate-ng
+                releaseName: release-<+INFRA_KEY>
+            allowSimultaneousDeployments: true
+          execution:
+            steps:
+              - step:
+                  name: Stage Deployment
+                  identifier: stageDeployment
+                  type: K8sBlueGreenDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: false
+              - step:
+                  name: Swap primary with stage service
+                  identifier: bgSwapServices
+                  type: K8sBGSwapServices
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: Swap primary with stage service
+                  identifier: rollbackBgSwapServices
+                  type: K8sBGSwapServices
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
   identifier: KubernetesWebsite_Clone
   name: KubernetesWebsite - Clone
