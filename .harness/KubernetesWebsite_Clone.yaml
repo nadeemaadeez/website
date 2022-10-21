@@ -154,6 +154,13 @@ pipeline:
                             repoName: website
                             branch: main
                         skipResourceVersioning: false
+                artifacts:
+                  primary:
+                    spec:
+                      connectorRef: account.DockerConnector
+                      imagePath: docker:dind
+                      tag: <+input>
+                    type: DockerRegistry
               type: Kubernetes
           infrastructure:
             environmentRef: Devlopement_environment
@@ -196,5 +203,10 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+          - onFailure:
+              errors:
+                - DelegateProvisioning
+              action:
+                type: MarkAsSuccess
   identifier: KubernetesWebsite_Clone
   name: KubernetesWebsite - Clone
