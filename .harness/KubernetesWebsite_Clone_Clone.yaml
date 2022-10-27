@@ -1,0 +1,207 @@
+---
+pipeline:
+  projectIdentifier: "SampleProject"
+  orgIdentifier: "default"
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: "GithubConnectorMN"
+        repoName: "website"
+        build: "<+input>"
+  stages:
+  - stage:
+      name: "BUILD CI"
+      identifier: "BUILD_CI"
+      type: "CI"
+      spec:
+        cloneCodebase: true
+        infrastructure:
+          type: "KubernetesDirect"
+          spec:
+            connectorRef: "HarAzureConnector"
+            namespace: "harness-delegate-ng"
+            automountServiceAccountToken: true
+            nodeSelector: {}
+            os: "Linux"
+        execution:
+          steps:
+          - step:
+              type: "GitClone"
+              name: "GitClone"
+              identifier: "GitClone"
+              spec:
+                connectorRef: "GithubConnectorMN"
+                repoName: "website"
+                build:
+                  type: "branch"
+                  spec:
+                    branch: "main"
+  - stage:
+      name: "Security Scanner"
+      identifier: "Security_Scanner"
+      type: "SecurityTests"
+      spec:
+        cloneCodebase: true
+        infrastructure:
+          useFromStage: "BUILD_CI"
+        serviceDependencies:
+        - identifier: "dind"
+          name: "dind"
+          type: "Service"
+          spec:
+            connectorRef: "account.DockerConnector"
+            image: "docker:dind"
+        sharedPaths:
+        - "var/run/"
+        execution:
+          steps:
+          - step:
+              type: "Security"
+              name: "BanditScan"
+              identifier: "BanditScan"
+              spec:
+                privileged: true
+                settings:
+                  policy_type: "orchestratedScan"
+                  scan_type: "repository"
+                  product_name: "bandit"
+                  product_config_name: "default"
+                  repository_branch: "<+codebase.branch>"
+                  repository_project: "dvpwa"
+  - stage:
+      name: "Jira Process"
+      identifier: "Jira_Process"
+      description: ""
+      type: "Approval"
+      spec:
+        execution:
+          steps:
+          - step:
+              name: "Create Story"
+              identifier: "Create_Story"
+              type: "JiraCreate"
+              timeout: "5m"
+              spec:
+                connectorRef: "HarnessJiraConnector"
+                projectKey: "HAR"
+                issueType: "Story"
+                fields:
+                - name: "Comment"
+                  value: "Story has been created"
+                - name: "Summary"
+                  value: "Harness Flow created on Jira"
+          - step:
+              name: "Jira Approval"
+              identifier: "Jira_Approval"
+              type: "JiraApproval"
+              timeout: "2m"
+              spec:
+                approvalCriteria:
+                  type: "KeyValues"
+                  spec:
+                    matchAnyCondition: true
+                    conditions:
+                    - key: "Status"
+                      operator: "equals"
+                      value: "To Do"
+                rejectionCriteria:
+                  type: "KeyValues"
+                  spec:
+                    matchAnyCondition: true
+                    conditions: []
+                connectorRef: "HarnessJiraConnector"
+                projectKey: "HAR"
+                issueType: "Story"
+                issueKey: "<+pipeline.stages.Jira_Process.spec.execution.steps.Create_Story.issue.key>"
+          - step:
+              name: "Complete"
+              identifier: "Complete"
+              type: "JiraUpdate"
+              timeout: "2m"
+              spec:
+                connectorRef: "HarnessJiraConnector"
+                issueKey: "<+pipeline.stages.Jira_Process.spec.execution.steps.Create_Story.issue.key>"
+                transitionTo:
+                  transitionName: ""
+                  status: "Done"
+                fields:
+                - name: "Comment"
+                  value: "Story has been completed."
+      tags: {}
+  - stage:
+      name: "deploy CD"
+      identifier: "deploy_CD"
+      description: ""
+      type: "Deployment"
+      spec:
+        serviceConfig:
+          serviceRef: "Service_2"
+          serviceDefinition:
+            spec:
+              variables: []
+              manifests:
+              - manifest:
+                  identifier: "manifestmn"
+                  type: "K8sManifest"
+                  spec:
+                    store:
+                      type: "Git"
+                      spec:
+                        connectorRef: "GitKubeWebsiteConnector"
+                        gitFetchType: "Branch"
+                        paths:
+                        - "content/en/examples/service/nginx-service.yaml"
+                        repoName: "website"
+                        branch: "main"
+                    skipResourceVersioning: false
+              artifacts: {}
+            type: "Kubernetes"
+        infrastructure:
+          environmentRef: "Devlopement_environment"
+          infrastructureDefinition:
+            type: "KubernetesDirect"
+            spec:
+              connectorRef: "HarAzureConnector"
+              namespace: "harness-delegate-ng"
+              releaseName: "release-<+INFRA_KEY>"
+          allowSimultaneousDeployments: true
+        execution:
+          steps:
+          - step:
+              name: "Stage Deployment"
+              identifier: "stageDeployment"
+              type: "K8sBlueGreenDeploy"
+              timeout: "10m"
+              spec:
+                skipDryRun: false
+                pruningEnabled: false
+          - step:
+              name: "Swap primary with stage service"
+              identifier: "bgSwapServices"
+              type: "K8sBGSwapServices"
+              timeout: "10m"
+              spec:
+                skipDryRun: false
+          rollbackSteps:
+          - step:
+              name: "Swap primary with stage service"
+              identifier: "rollbackBgSwapServices"
+              type: "K8sBGSwapServices"
+              timeout: "10m"
+              spec:
+                skipDryRun: false
+      tags: {}
+      failureStrategies:
+      - onFailure:
+          errors:
+          - "AllErrors"
+          action:
+            type: "StageRollback"
+      - onFailure:
+          errors:
+          - "DelegateProvisioning"
+          action:
+            type: "MarkAsSuccess"
+  identifier: "KubernetesWebsite_Clone_Clone"
+  name: "KubernetesWebsite - Clone - Clone"
