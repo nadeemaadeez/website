@@ -168,16 +168,13 @@ pipeline:
           execution:
             steps:
               - step:
-                  name: Stage Deployment
-                  identifier: stageDeployment
-                  type: K8sBlueGreenDeploy
-                  timeout: 10m
+                  type: K8sRollingDeploy
+                  name: rolling deployment
+                  identifier: rolling_deployment
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
-                    delegateSelectors:
-                      - harnessazuredelegate
-                  failureStrategies: []
+                  timeout: 10m
               - step:
                   name: Swap primary with stage service
                   identifier: bgSwapServices
