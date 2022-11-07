@@ -175,8 +175,6 @@ pipeline:
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
-                    delegateSelectors:
-                      - harnessazuredelegate
                   failureStrategies: []
               - step:
                   name: Swap primary with stage service
