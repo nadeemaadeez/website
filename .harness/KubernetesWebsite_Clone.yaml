@@ -174,7 +174,10 @@ pipeline:
                   spec:
                     skipDryRun: false
                     pruningEnabled: false
+                    delegateSelectors:
+                      - harnessazuredelegate
                   timeout: 10m
+                  failureStrategies: []
             rollbackSteps:
               - step:
                   name: Swap primary with stage service
