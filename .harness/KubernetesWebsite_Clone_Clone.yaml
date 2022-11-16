@@ -178,6 +178,41 @@ pipeline:
                       - harnessazuredelegate
                   timeout: 10m
                   failureStrategies: []
+              - step:
+                  type: Verify
+                  name: Continuous Verification
+                  identifier: Continuous_Verification
+                  spec:
+                    type: Rolling
+                    monitoredService:
+                      type: Default
+                      spec: {}
+                    spec:
+                      sensitivity: LOW
+                      duration: 5m
+                      deploymentTag: <+serviceConfig.artifacts.primary.tag>
+                  timeout: 10m
+                  failureStrategies:
+                    - onFailure:
+                        errors:
+                          - Verification
+                        action:
+                          type: ManualIntervention
+                          spec:
+                            timeout: 2h
+                            onTimeout:
+                              action:
+                                type: StageRollback
+                    - onFailure:
+                        errors:
+                          - Unknown
+                        action:
+                          type: ManualIntervention
+                          spec:
+                            timeout: 2h
+                            onTimeout:
+                              action:
+                                type: Ignore
             rollbackSteps:
               - step:
                   name: Swap primary with stage service
